@@ -5,6 +5,24 @@ import requests
 from itertools import product
 
 
+def extract_and_standardize_metric(
+    metric,
+    country_name_replacements,
+    output_directory,
+):
+    """Retrieve one configured Eurostat metric and return panel-compatible data."""
+    output_directory.mkdir(parents=True, exist_ok=True)
+    observations = get_eurostat(metric["id"], metric["params"])
+    observations.to_csv(output_directory / f"{metric['id']}.csv", index=False)
+
+    return standardize_eurostat_observations(
+        observations,
+        metric["metric_name"],
+        country_name_replacements,
+        metric.get("frequency", "M"),
+    )
+
+
 def jsonstat_to_dataframe(payload):
     dimensions = payload["id"]
 
@@ -127,104 +145,3 @@ def expand_quarterly_periods(periods):
         ],
         dtype="string",
     )
-
-
-country_name_replacements = {
-    "NL": "Netherlands",
-    "PL": "Poland",
-    "BG": "Bulgaria",
-    "RO": "Romania",
-}
-
-eurostat_metrics = [
-    {
-        "id": "une_rt_m",
-        "metric_name": "Unemployment",
-        "benchmark_country": "Netherlands",
-        "benchmark_label": "NL",
-        "params": [
-            ("freq", "M"),
-            ("s_adj", "SA"),
-            ("unit", "PC_ACT"),
-            ("sex", "T"),
-            ("age", "TOTAL"),
-            ("geo", "NL"),
-            ("geo", "PL"),
-            ("geo", "BG"),
-            ("geo", "RO"),
-            ("sinceTimePeriod", "1995-01"),
-            ("lang", "en"),
-        ],
-    },
-    {
-        "id": "prc_hicp_minr",
-        "metric_name": "HICP-Monthly-Change",
-        "benchmark_country": "Netherlands",
-        "benchmark_label": "NL",
-        "params": [
-            ("freq", "M"),
-            ("unit", "RCH_M"),
-            ("coicop18", "TOTAL"),
-            ("geo", "NL"),
-            ("geo", "PL"),
-            ("geo", "BG"),
-            ("geo", "RO"),
-            ("sinceTimePeriod", "1995-01"),
-            ("lang", "en"),
-        ],
-    },
-    {
-        "id": "sts_inpr_m",
-        "metric_name": "Industrial-Production",
-        "benchmark_country": "Netherlands",
-        "benchmark_label": "NL",
-        "params": [
-            ("freq", "M"),
-            ("indic_bt", "PRD"),
-            ("nace_r2", "B-D"),
-            ("s_adj", "SCA"),
-            ("unit", "I21"),
-            ("geo", "NL"),
-            ("geo", "PL"),
-            ("geo", "BG"),
-            ("geo", "RO"),
-            ("lang", "en"),
-        ],
-    },
-    {
-        "id": "prc_hpi_q",
-        "metric_name": "House-Price-Index",
-        "benchmark_country": "Netherlands",
-        "benchmark_label": "NL",
-        "frequency": "Q",
-        "params": [
-            ("freq", "Q"),
-            ("purchase", "TOTAL"),
-            ("unit", "I15_Q"),
-            ("geo", "NL"),
-            ("geo", "PL"),
-            ("geo", "BG"),
-            ("geo", "RO"),
-            ("lang", "en"),
-        ],
-    },
-    {
-        "id": "jvs_q_r21",
-        "metric_name": "Job-Vacancy-Rate",
-        "benchmark_country": "Netherlands",
-        "benchmark_label": "NL",
-        "frequency": "Q",
-        "params": [
-            ("freq", "Q"),
-            ("nace_r2_1", "A-T"),
-            ("sizeclas", "TOTAL"),
-            ("s_adj", "SA"),
-            ("indic_em", "JVR"),
-            ("geo", "NL"),
-            ("geo", "PL"),
-            ("geo", "BG"),
-            ("geo", "RO"),
-            ("lang", "en"),
-        ],
-    },
-]
