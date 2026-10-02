@@ -1,3 +1,8 @@
+### main.py
+"""Build and export the configured immigration analysis panel.
+
+Run this module to retrieve source data, merge it, apply period bounds, and write CSV output.
+"""
 
 from cbs import (
     extract_and_standardize_immigration,
@@ -6,10 +11,11 @@ from config import (
     CBS_COUNTRY_NAME_REPLACEMENTS,
     CBS_TABLES,
     CONJUNCTUURKLOK_FILE,
-    DATA_DIRECTORY,
     EUROSTAT_COUNTRY_NAME_REPLACEMENTS,
     EUROSTAT_METRICS,
     PANEL_DATA_FILE,
+    PANEL_END_PERIOD,
+    PANEL_START_PERIOD,
 )
 from dataset import ImmigrationPanel
 from eurostat import (
@@ -23,7 +29,6 @@ def main():
         extract_and_standardize_immigration(
             table,
             CBS_COUNTRY_NAME_REPLACEMENTS,
-            DATA_DIRECTORY,
         )
         for table in CBS_TABLES
     ]
@@ -33,7 +38,6 @@ def main():
         standardized_metric = extract_and_standardize_metric(
             metric,
             EUROSTAT_COUNTRY_NAME_REPLACEMENTS,
-            DATA_DIRECTORY,
         )
         panel.absorb_country_metric(
             standardized_metric,
@@ -44,8 +48,9 @@ def main():
 
     panel.absorb_national_metric(
         load_conjunctuurklok(CONJUNCTUURKLOK_FILE),
-        "Conjunctuurklok",
+        "CONJCLK",
     )
+    panel.restrict_periods(PANEL_START_PERIOD, PANEL_END_PERIOD)
     panel.to_csv(PANEL_DATA_FILE)
     return panel
 

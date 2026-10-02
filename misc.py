@@ -1,3 +1,9 @@
+### misc.py
+"""Load and standardize auxiliary local indicators for the panel.
+
+Imported by main.py to add the repository's local Conjunctuurklok series.
+"""
+
 import pandas as pd
 
 
