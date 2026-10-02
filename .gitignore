@@ -5,3 +5,9 @@ data/*.csv
 
 # Ignore PyCharm specifics
 .idea/
+
+# Ignore Python stuff
+__pychache__/
+
+# Ignore virtual environment
+.venv/
