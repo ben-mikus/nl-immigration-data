@@ -1,5 +1,7 @@
 
 # Ignore all CSV's except for the final result.
-
 data/*.csv
 !data/panel_data.csv
+
+# Ignore PyCharm specifics
+.idea/
