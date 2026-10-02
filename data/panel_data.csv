@@ -1,4 +1,4 @@
-Period,Country,Immigration,Country-Minimum-Wage-PPS,NL-Minimum-Wage-PPS,Country-Wages-and-Salaries-Index,NL-Wages-and-Salaries-Index,NL-Conjunctuurklok
+Period,Country,Immigration,Country-MINWAGE,NL-MINWAGE,Country-WAGESAL,NL-WAGESAL,NL-CONJCLK
 201001,Poland,1175.0,543.0,1283.0,62.3,81.5,-0.43
 201002,Poland,1086.0,543.0,1283.0,62.3,81.5,-0.36
 201003,Poland,1398.0,543.0,1283.0,62.3,81.5,-0.32
