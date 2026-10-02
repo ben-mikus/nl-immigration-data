@@ -1,4 +1,8 @@
 ### cbs.py
+"""Retrieve CBS immigration observations and normalize them for the panel.
+
+Imported by main.py to fetch configured CBS tables and map their codes to countries.
+"""
 
 import pandas as pd
 import requests
@@ -7,19 +11,12 @@ import requests
 def extract_and_standardize_immigration(
     table,
     country_name_replacements,
-    output_directory,
 ):
     """Retrieve one configured CBS table and return standardized immigration data."""
-    output_directory.mkdir(parents=True, exist_ok=True)
     table_url = f"https://datasets.cbs.nl/odata/v1/CBS/{table['id']}"
     observations = get_odata(f"{table_url}/Observations", table["params"])
-    observations.to_csv(output_directory / f"{table['id']}.csv", index=False)
 
     country_codes = get_odata(f"{table_url}/{table['country_codes_endpoint']}")
-    country_codes.to_csv(
-        output_directory / f"{table['id']}_{table['country_codes_file_stem']}.csv",
-        index=False,
-    )
 
     return standardize_immigration_observations(
         observations,

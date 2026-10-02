@@ -1,3 +1,9 @@
+### config.py
+"""Define the pipeline's data sources, metrics, and output settings.
+
+Imported by main.py to configure API requests, period limits, and file locations.
+"""
+
 from pathlib import Path
 
 
@@ -5,10 +11,11 @@ DATA_DIRECTORY = Path("data")
 CONJUNCTUURKLOK_FILE = Path("table-conjunctuur-indicator.csv")
 PANEL_DATA_FILE = DATA_DIRECTORY / "panel_data.csv"
 
+PANEL_START_PERIOD = "201001"
+PANEL_END_PERIOD = "202512"
+
 CBS_COUNTRY_NAME_REPLACEMENTS = {
-    "Bulgarije": "Bulgaria",
     "Polen": "Poland",
-    "Roemenië": "Romania",
 }
 
 CBS_TABLES = [
@@ -23,11 +30,7 @@ CBS_TABLES = [
                 "and substring(Perioden,4,2) eq 'MM' "
                 "and Geboorteland eq 'T001638' "
                 "and Geslacht eq 'T001038' "
-                "and ("
-                "Herkomstland eq 'H008718' "
-                "or Herkomstland eq 'H008567' "
-                "or Herkomstland eq 'H008723' "
-                ")"
+                "and Herkomstland eq 'H008718'"
             )
         },
     },
@@ -42,11 +45,7 @@ CBS_TABLES = [
                 "and substring(Perioden,4,2) eq 'MM' "
                 "and Generatie eq 'T001040' "
                 "and Geslacht eq 'T001038' "
-                "and ("
-                "Migratieachtergrond eq 'H008718' "
-                "or Migratieachtergrond eq 'H008567' "
-                "or Migratieachtergrond eq 'H008723' "
-                ")"
+                "and Migratieachtergrond eq 'H008718'"
             )
         },
     },
@@ -55,98 +54,37 @@ CBS_TABLES = [
 EUROSTAT_COUNTRY_NAME_REPLACEMENTS = {
     "NL": "Netherlands",
     "PL": "Poland",
-    "BG": "Bulgaria",
-    "RO": "Romania",
 }
 
 EUROSTAT_METRICS = [
     {
-        "id": "une_rt_m",
-        "metric_name": "Unemployment",
+        "id": "earn_mw_cur",
+        "metric_name": "MINWAGE",
         "benchmark_country": "Netherlands",
         "benchmark_label": "NL",
+        "frequency": "S",
         "params": [
-            ("freq", "M"),
-            ("s_adj", "SA"),
-            ("unit", "PC_ACT"),
-            ("sex", "T"),
-            ("age", "TOTAL"),
+            ("freq", "S"),
+            ("currency", "PPS"),
             ("geo", "NL"),
             ("geo", "PL"),
-            ("geo", "BG"),
-            ("geo", "RO"),
-            ("sinceTimePeriod", "1995-01"),
             ("lang", "en"),
         ],
     },
     {
-        "id": "prc_hicp_minr",
-        "metric_name": "HICP-Monthly-Change",
+        "id": "lc_lci_r2_q",
+        "metric_name": "WAGESAL",
         "benchmark_country": "Netherlands",
         "benchmark_label": "NL",
+        "frequency": "Q",
         "params": [
-            ("freq", "M"),
-            ("unit", "RCH_M"),
-            ("coicop18", "TOTAL"),
-            ("geo", "NL"),
-            ("geo", "PL"),
-            ("geo", "BG"),
-            ("geo", "RO"),
-            ("sinceTimePeriod", "1995-01"),
-            ("lang", "en"),
-        ],
-    },
-    {
-        "id": "sts_inpr_m",
-        "metric_name": "Industrial-Production",
-        "benchmark_country": "Netherlands",
-        "benchmark_label": "NL",
-        "params": [
-            ("freq", "M"),
-            ("indic_bt", "PRD"),
-            ("nace_r2", "B-D"),
+            ("freq", "Q"),
             ("s_adj", "SCA"),
-            ("unit", "I21"),
+            ("unit", "I20"),
+            ("nace_r2", "B-S"),
+            ("lcstruct", "D11"),
             ("geo", "NL"),
             ("geo", "PL"),
-            ("geo", "BG"),
-            ("geo", "RO"),
-            ("lang", "en"),
-        ],
-    },
-    {
-        "id": "prc_hpi_q",
-        "metric_name": "House-Price-Index",
-        "benchmark_country": "Netherlands",
-        "benchmark_label": "NL",
-        "frequency": "Q",
-        "params": [
-            ("freq", "Q"),
-            ("purchase", "TOTAL"),
-            ("unit", "I15_Q"),
-            ("geo", "NL"),
-            ("geo", "PL"),
-            ("geo", "BG"),
-            ("geo", "RO"),
-            ("lang", "en"),
-        ],
-    },
-    {
-        "id": "jvs_q_r21",
-        "metric_name": "Job-Vacancy-Rate",
-        "benchmark_country": "Netherlands",
-        "benchmark_label": "NL",
-        "frequency": "Q",
-        "params": [
-            ("freq", "Q"),
-            ("nace_r2_1", "A-T"),
-            ("sizeclas", "TOTAL"),
-            ("s_adj", "SA"),
-            ("indic_em", "JVR"),
-            ("geo", "NL"),
-            ("geo", "PL"),
-            ("geo", "BG"),
-            ("geo", "RO"),
             ("lang", "en"),
         ],
     },

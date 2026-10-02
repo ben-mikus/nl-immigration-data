@@ -1,4 +1,8 @@
 ### eurostat.py
+"""Retrieve Eurostat indicators and normalize them for the panel.
+
+Imported by main.py to fetch configured country metrics and align their periods.
+"""
 
 import pandas as pd
 import requests
@@ -8,12 +12,9 @@ from itertools import product
 def extract_and_standardize_metric(
     metric,
     country_name_replacements,
-    output_directory,
 ):
     """Retrieve one configured Eurostat metric and return panel-compatible data."""
-    output_directory.mkdir(parents=True, exist_ok=True)
     observations = get_eurostat(metric["id"], metric["params"])
-    observations.to_csv(output_directory / f"{metric['id']}.csv", index=False)
 
     return standardize_eurostat_observations(
         observations,
@@ -108,6 +109,12 @@ def standardize_eurostat_observations(
         )
         countries = countries.loc[countries.index.repeat(3)].reset_index(drop=True)
         panel_periods = expand_quarterly_periods(periods)
+    elif frequency == "S":
+        observations = observations.loc[observations.index.repeat(6)].reset_index(
+            drop=True
+        )
+        countries = countries.loc[countries.index.repeat(6)].reset_index(drop=True)
+        panel_periods = expand_semesterly_periods(periods)
     else:
         raise ValueError(f"Unsupported Eurostat frequency: {frequency}")
 
@@ -142,6 +149,23 @@ def expand_quarterly_periods(periods):
             f"{period[:4]}{month:02d}"
             for period in periods
             for month in range((int(period[-1]) - 1) * 3 + 1, int(period[-1]) * 3 + 1)
+        ],
+        dtype="string",
+    )
+
+
+def expand_semesterly_periods(periods):
+    """Repeat half-yearly values across their six calendar-semester months."""
+    valid_periods = periods.str.fullmatch(r"\d{4}-S[12]")
+    if not valid_periods.fillna(False).all():
+        invalid_periods = periods.loc[~valid_periods.fillna(False)].unique().tolist()
+        raise ValueError(f"Invalid Eurostat half-yearly periods: {invalid_periods}")
+
+    return pd.Series(
+        [
+            f"{period[:4]}{month:02d}"
+            for period in periods
+            for month in range((int(period[-1]) - 1) * 6 + 1, int(period[-1]) * 6 + 1)
         ],
         dtype="string",
     )
