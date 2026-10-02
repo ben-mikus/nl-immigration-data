@@ -78,6 +78,6 @@ def standardize_conjunctuurklok(observations):
     return pd.DataFrame(
         {
             "Period": standardized_periods,
-            "Conjunctuurklok": values,
+            "CONJCLK": values,
         }
     )
