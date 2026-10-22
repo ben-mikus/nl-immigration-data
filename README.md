@@ -9,10 +9,12 @@ wages-and-salaries Labour Cost Index, and the Dutch Conjunctuurklok.
 
 Use Python 3.12 or later, then install the two runtime dependencies:
 
-```powershell
+```PowerShell
 python -m venv .venv
-.\.venv\Scripts\python -m pip install pandas requests
-.\.venv\Scripts\python main.py
+```
+
+```PowerShell
+python -m pip install -r requirements.txt
 ```
 
 The pipeline retrieves CBS and Eurostat data at runtime and writes the final

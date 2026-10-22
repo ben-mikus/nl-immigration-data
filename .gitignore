@@ -3,11 +3,12 @@
 data/*.csv
 !data/panel_data.csv
 
-# Ignore PyCharm specifics
+# Ignore IDE specifics
 .idea/
+.vscode/
 
 # Ignore Python stuff
-__pychache__/
+__pycache__/
 
 # Ignore virtual environment
 .venv/
