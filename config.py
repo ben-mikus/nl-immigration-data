@@ -1,8 +1,6 @@
 ### config.py
-"""Define the pipeline's data sources, metrics, and output settings.
+"""Defines the API configuration."""
 
-Imported by main.py to configure API requests, period limits, and file locations.
-"""
 
 from pathlib import Path
 
@@ -51,13 +49,15 @@ CBS_TABLES = [
     },
 ]
 
-EUROSTAT_COUNTRY_NAME_REPLACEMENTS = {
+EUROSTAT_COUNTRY_CODES = {
     "NL": "Netherlands",
     "PL": "Poland",
+    "BG": "Bulgaria",
+    "RO": "Romania"
 }
 
-EUROSTAT_METRICS = [
-    {
+EUROSTAT_METRICS = {
+    "Monthly Minimum Wages": {
         "id": "earn_mw_cur",
         "metric_name": "MINWAGE",
         "benchmark_country": "Netherlands",
@@ -71,7 +71,7 @@ EUROSTAT_METRICS = [
             ("lang", "en"),
         ],
     },
-    {
+    "Nominal Labour Cost Index": {
         "id": "lc_lci_r2_q",
         "metric_name": "WAGESAL",
         "benchmark_country": "Netherlands",
@@ -88,4 +88,4 @@ EUROSTAT_METRICS = [
             ("lang", "en"),
         ],
     },
-]
+}

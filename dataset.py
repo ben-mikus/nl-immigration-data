@@ -106,6 +106,14 @@ class ImmigrationPanel:
 
         self.data = self.data.loc[within_bounds].reset_index(drop=True)
 
+    def restrict_countries(self, countries):
+        """Keep observations for the specified countries only."""
+
+        self.data = (
+            self.data.loc[self.data["Country"].isin(countries)]
+            .reset_index(drop=True)
+        )
+
     def to_csv(self, output_file):
         """Write the assembled panel without its DataFrame index."""
         output_file.parent.mkdir(parents=True, exist_ok=True)
