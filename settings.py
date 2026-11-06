@@ -4,12 +4,12 @@
 COUNTRIES = [
     "Bulgaria",
     "Poland",
-    # "Romania",
+    "Romania"
 ]
 
 CONJUNCTUURKLOK = True
 
 METRICS = [
-    # "Monthly Minimum Wages",
-    # "Nominal Labour Cost Index"
+    "Monthly Minimum Wages",
+    "Nominal Labour Cost Index"
 ]
