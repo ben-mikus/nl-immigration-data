@@ -2,11 +2,12 @@
 """Used by the user to define the contents of the dataset."""
 
 COUNTRIES = [
+    "Bulgaria",
     "Poland",
-    # "Bulgaria"
+    # "Romania",
 ]
 
-CONJUNCTUURKLOK = False
+CONJUNCTUURKLOK = True
 
 METRICS = [
     # "Monthly Minimum Wages",

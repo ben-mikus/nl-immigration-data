@@ -14,6 +14,8 @@ PANEL_END_PERIOD = "202512"
 
 CBS_COUNTRY_NAME_REPLACEMENTS = {
     "Polen": "Poland",
+    "Bulgarije": "Bulgaria",
+    "Roemenië": "Romania",
 }
 
 CBS_TABLES = [
@@ -28,7 +30,9 @@ CBS_TABLES = [
                 "and substring(Perioden,4,2) eq 'MM' "
                 "and Geboorteland eq 'T001638' "
                 "and Geslacht eq 'T001038' "
-                "and Herkomstland eq 'H008718'"
+                "and (Herkomstland eq 'H008567' "
+                "or Herkomstland eq 'H008718' "
+                "or Herkomstland eq 'H008723')"
             )
         },
     },
@@ -43,7 +47,9 @@ CBS_TABLES = [
                 "and substring(Perioden,4,2) eq 'MM' "
                 "and Generatie eq 'T001040' "
                 "and Geslacht eq 'T001038' "
-                "and Migratieachtergrond eq 'H008718'"
+                "and (Migratieachtergrond eq 'H008567' "
+                "or Migratieachtergrond eq 'H008718' "
+                "or Migratieachtergrond eq 'H008723')"
             )
         },
     },
@@ -68,6 +74,8 @@ EUROSTAT_METRICS = {
             ("currency", "PPS"),
             ("geo", "NL"),
             ("geo", "PL"),
+            ("geo", "BG"),
+            ("geo", "RO"),
             ("lang", "en"),
         ],
     },
@@ -85,6 +93,8 @@ EUROSTAT_METRICS = {
             ("lcstruct", "D11"),
             ("geo", "NL"),
             ("geo", "PL"),
+            ("geo", "BG"),
+            ("geo", "RO"),
             ("lang", "en"),
         ],
     },
