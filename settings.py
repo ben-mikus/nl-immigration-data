@@ -16,7 +16,7 @@ METRICS = [
     "Monthly Minimum Wages",
     "Nominal Labour Cost Index",
     "Unemployment Rate",
-    "Job Vacancy Rate",
+    # "Job Vacancy Rate",
     "Consumer Price Index",
     "Real GDP Growth",
 ]
