@@ -124,41 +124,6 @@ EUROSTAT_METRICS = {
             ("lang", "en"),
         ],
     },
-
-    "Job Vacancy Rate": {
-        "id": "jvs_q_r21",
-        "metric_name": "JOBVAC",
-        "benchmark_country": "Netherlands",
-        "benchmark_label": "NL",
-        "frequency": "Q",
-        "params": [
-            ("freq", "Q"),
-            ("s_adj", "SA"),
-            ("nace_r2_1", "B-T"),
-            ("sizeclas", "TOTAL"),
-            ("indic_em", "JOBRATE"),
-            *[("geo", c) for c in
-            ("NL", "BG", "PL", "RO", "DE", "IT", "ES")],
-            ("lang", "en"),
-        ],
-    },
-
-    "Consumer Price Index": {
-        "id": "prc_hicp_midx",
-        "metric_name": "HICP",
-        "benchmark_country": "Netherlands",
-        "benchmark_label": "NL",
-        "frequency": "M",
-        "params": [
-            ("freq", "M"),
-            ("unit", "I15"),
-            ("coicop", "CP00"),
-            *[("geo", c) for c in
-            ("NL", "BG", "PL", "RO", "DE", "IT", "ES")],
-            ("lang", "en"),
-        ],
-    },
-
     "Real GDP Growth": {
         "id": "namq_10_gdp",
         "metric_name": "GDP",

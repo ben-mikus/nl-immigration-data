@@ -29,7 +29,7 @@ def engineer_features(data):
 
     debug("=== Engineering Economic Features ===")
 
-    # Unemployment
+    ### Unemployment
     if {"Country-UNEMP", "NL-UNEMP"} <= set(data.columns):
         data["UNEMP-GAP"] = data["Country-UNEMP"] - data["NL-UNEMP"]
 
@@ -42,13 +42,13 @@ def engineer_features(data):
             data, "NL-UNEMP", months
         )
 
-    # Job vacancies
+    ### Job vacancies
     if {"Country-JOBVAC", "NL-JOBVAC"} <= set(data.columns):
         data["JOBVAC-GAP"] = (
             data["NL-JOBVAC"] - data["Country-JOBVAC"]
         )
 
-    # Wages and salaries
+    ### Wages and salaries
     if {"Country-WAGESAL", "NL-WAGESAL"} <= set(data.columns):
         months = FEATURE_PERIODS["WAGESAL"]
 
@@ -58,29 +58,19 @@ def engineer_features(data):
         data["NL-WAGESAL-GROWTH"] = percentage_change(
             data, "NL-WAGESAL", months
         )
-
-    # Inflation
-    if {"Country-HICP", "NL-HICP"} <= set(data.columns):
-        months = FEATURE_PERIODS["HICP"]
-
-        data["Country-INFLATION"] = percentage_change(
-            data, "Country-HICP", months
-        )
-        data["NL-INFLATION"] = percentage_change(
-            data, "NL-HICP", months
-        )
-        data["HICP-GAP"] = (
-            data["Country-INFLATION"] - data["NL-INFLATION"]
+        data["WAGESAL-GAP"] = (
+            data["NL-WAGESAL-GROWTH"]
+            - data["WAGESAL-GROWTH"]
         )
 
-    # Minimum wages
+    ### Minimum wages
     if {"Country-MINWAGE", "NL-MINWAGE"} <= set(data.columns):
         data["MINWAGE-RATIO"] = (
             data["NL-MINWAGE"]
             / data["Country-MINWAGE"].replace(0, np.nan)
         )
 
-    # GDP: already a quarter-on-quarter growth percentage
+    ### GDP: already a quarter-on-quarter growth percentage
     if {"Country-GDP", "NL-GDP"} <= set(data.columns):
         data["GDP-GROWTH-GAP"] = (
             data["NL-GDP"] - data["Country-GDP"]
