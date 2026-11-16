@@ -6,10 +6,32 @@ Imported by main.py to add the repository's local Conjunctuurklok series.
 
 import pandas as pd
 
+from debug import debug, debug_frame
+
 
 def load_conjunctuurklok(source_file):
     """Load and standardize local Conjunctuurklok observations."""
-    return standardize_conjunctuurklok(pd.read_csv(source_file))
+    raw = pd.read_csv(source_file)
+
+    debug_frame("Raw Conjunctuurklok", raw)
+
+    standardized = standardize_conjunctuurklok(raw)
+
+    debug_frame("Standardized Conjunctuurklok", standardized)
+
+    debug(
+        "Conjunctuurklok period range: %s to %s",
+        standardized["Period"].min(),
+        standardized["Period"].max(),
+    )
+
+    debug(
+        "Conjunctuurklok value range: %.3f to %.3f",
+        standardized["CONJCLK"].min(),
+        standardized["CONJCLK"].max(),
+    )
+
+    return standardized
 
 
 def standardize_conjunctuurklok(observations):

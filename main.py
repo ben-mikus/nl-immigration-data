@@ -15,6 +15,7 @@ from config import (
     PANEL_END_PERIOD,
     PANEL_START_PERIOD,
 )
+from debug import debug, debug_frame, debug_duplicates, validate_panel
 from cbs import extract_and_standardize_immigration
 from dataset import ImmigrationPanel
 from eurostat import extract_and_standardize_metric
@@ -22,6 +23,22 @@ from misc import load_conjunctuurklok
 
 
 def main():
+
+    debug("=== Pipeline Configuration ===")
+    debug("Countries: %s", COUNTRIES)
+    debug("Enabled metrics: %s", METRICS)
+    debug("Conjunctuurklok enabled: %s", CONJUNCTUURKLOK)
+    debug("Period range: %s to %s",
+          PANEL_START_PERIOD, PANEL_END_PERIOD)
+
+    for name, metric in EUROSTAT_METRICS.items():
+        if name in METRICS:
+            debug(
+                "Metric %s: dataset=%s, frequency=%s",
+                name,
+                metric["id"],
+                metric["frequency"]
+            )
 
     standardized_sources = [
         extract_and_standardize_immigration(
@@ -58,6 +75,40 @@ def main():
 
     panel.restrict_countries(COUNTRIES)    
     panel.restrict_periods(PANEL_START_PERIOD, PANEL_END_PERIOD)
+
+    debug_frame("Final immigration panel", panel.data)
+
+    debug_duplicates(
+        "Final immigration panel",
+        panel.data,
+        ["Period", "Country"],
+    )
+
+    debug(
+        "Final country coverage:\n%s",
+        panel.data.groupby("Country")["Period"]
+        .agg(["min", "max", "count"])
+        .to_string(),
+    )
+
+    debug(
+        "Missing values by country:\n%s",
+        panel.data.groupby("Country")
+        .apply(
+            lambda df: df.isna().sum(),
+            include_groups=False,
+        )
+        .to_string(),
+    )
+
+    debug(
+        "Final panel: %d rows, %d columns",
+        len(panel.data),
+        len(panel.data.columns),
+    )
+
+    validate_panel(panel.data, COUNTRIES)
+
     panel.to_csv(PANEL_DATA_FILE)
     return panel
 

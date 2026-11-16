@@ -8,6 +8,8 @@ import pandas as pd
 import requests
 from itertools import product
 
+from debug import debug, debug_frame, debug_coverage
+
 
 def extract_and_standardize_metric(
     metric,
@@ -16,12 +18,39 @@ def extract_and_standardize_metric(
     """Retrieve one configured Eurostat metric and return panel-compatible data."""
     observations = get_eurostat(metric["id"], metric["params"])
 
-    return standardize_eurostat_observations(
+    debug(
+        "Metric %s: %d raw rows, %d missing values",
+        metric["metric_name"],
+        len(observations),
+        observations["value"].isna().sum(),
+    )
+
+    debug(
+        "Raw coverage by geography:\n%s",
+        observations.groupby("geo")["value"]
+        .agg(
+            observations="size",
+            available="count",
+            minimum="min",
+            maximum="max",
+        )
+        .to_string(),
+    )
+
+    standardized = standardize_eurostat_observations(
         observations,
         metric["metric_name"],
         country_name_replacements,
         metric.get("frequency", "M"),
     )
+
+    debug_coverage(
+        metric["metric_name"],
+        standardized,
+        metric["metric_name"],
+    )
+
+    return standardized
 
 
 def jsonstat_to_dataframe(payload):
@@ -81,7 +110,29 @@ def get_eurostat(dataset_id, params):
     )
     response.raise_for_status()
 
-    return jsonstat_to_dataframe(response.json())
+    debug("=== Eurostat %s ===", dataset_id)
+    debug("Request URL: %s", response.url)
+    debug("Response status: %d", response.status_code)
+
+    payload = response.json()
+
+    debug("Dimensions: %s", payload.get("id"))
+    debug("Dimension sizes: %s", payload.get("size"))
+
+    for dimension in payload["id"]:
+        category = payload["dimension"][dimension]["category"]
+
+        debug(
+            "Dimension %s categories: %s",
+            dimension,
+            category["index"],
+        )
+
+    result = jsonstat_to_dataframe(payload)
+
+    debug_frame(f"Raw Eurostat {dataset_id}", result)
+
+    return result
 
 
 def standardize_eurostat_observations(
@@ -118,13 +169,31 @@ def standardize_eurostat_observations(
     else:
         raise ValueError(f"Unsupported Eurostat frequency: {frequency}")
 
-    return pd.DataFrame(
+    result = pd.DataFrame(
         {
             "Period": panel_periods,
             "Country": countries,
-            metric_name: pd.to_numeric(observations["value"], errors="raise"),
+            metric_name: pd.to_numeric(
+                observations["value"],
+                errors="raise",
+            ),
         }
     )
+
+    debug(
+        "%s: frequency=%s, output rows=%d",
+        metric_name,
+        frequency,
+        len(result),
+    )
+
+    debug_frame(
+        f"Monthly representation of {metric_name}",
+        result,
+        sample=12,
+    )
+
+    return result
 
 
 def standardize_monthly_periods(periods):

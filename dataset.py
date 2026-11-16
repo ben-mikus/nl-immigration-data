@@ -8,15 +8,67 @@ import re
 
 import pandas as pd
 
+from debug import (
+    debug,
+    debug_frame,
+    debug_coverage,
+    debug_duplicates,
+)
+
 
 class ImmigrationPanel:
     """Assemble immigration observations and related monthly metrics."""
 
     def __init__(self, sources):
+        
         if not sources:
             raise ValueError("At least one standardized panel source is required")
 
         combined = pd.concat(sources, ignore_index=True)
+
+        debug_duplicates(
+            "Combined CBS observations",
+            combined,
+            ["Period", "Country"],
+        )
+
+        if len(sources) > 1:
+            labeled = pd.concat(
+                [
+                    source.assign(Source=f"CBS source {i + 1}")
+                    for i, source in enumerate(sources)
+                ],
+                ignore_index=True,
+            )
+
+            comparison = (
+                labeled.groupby(["Period", "Country"])
+                .agg(
+                    source_count=("Source", "nunique"),
+                    distinct_values=("Immigration", "nunique"),
+                    minimum=("Immigration", "min"),
+                    maximum=("Immigration", "max"),
+                )
+                .reset_index()
+            )
+
+            overlap = comparison.loc[
+                comparison["source_count"] > 1
+            ]
+
+            disagreements = overlap.loc[
+                overlap["distinct_values"] > 1
+            ]
+
+            debug("Overlapping CBS country-months: %d", len(overlap))
+            debug("Disagreeing CBS country-months: %d", len(disagreements))
+
+            if not disagreements.empty:
+                debug(
+                    "CBS disagreements:\n%s",
+                    disagreements.head(20).to_string(index=False),
+                )
+
         required_columns = {"Period", "Country", "Immigration"}
         missing_columns = required_columns.difference(combined.columns)
         if missing_columns:
@@ -51,10 +103,38 @@ class ImmigrationPanel:
             metric_data["Country"].eq(benchmark_country),
             ["Period", metric_name],
         ].rename(columns={metric_name: benchmark_column})
+
+        debug(
+            "%s Dutch benchmark observations: %d",
+            metric_name,
+            len(benchmark_metric),
+        )
+
+        debug(
+            "%s benchmark missing values: %d",
+            metric_name,
+            benchmark_metric[benchmark_column].isna().sum(),
+        )
+
+        debug_duplicates(
+            f"{metric_name} Dutch benchmark",
+            benchmark_metric,
+            ["Period"],
+        )
+
         country_metric = metric_data.loc[
             ~metric_data["Country"].eq(benchmark_country),
             ["Period", "Country", metric_name],
         ].rename(columns={metric_name: country_column})
+
+        debug("=== Merging %s ===", metric_name)
+        debug("Panel rows before merge: %d", len(self.data))
+
+        debug_duplicates(
+            f"{metric_name} source",
+            metric_data,
+            ["Period", "Country"],
+        )
 
         self.data = self.data.merge(
             country_metric,
@@ -62,6 +142,26 @@ class ImmigrationPanel:
             how="left",
         )
         self.data = self.data.merge(benchmark_metric, on="Period", how="left")
+
+        debug("Panel rows after merge: %d", len(self.data))
+
+        debug(
+            "%s missing country values: %d",
+            metric_name,
+            self.data[country_column].isna().sum(),
+        )
+
+        debug(
+            "%s missing benchmark values: %d",
+            metric_name,
+            self.data[benchmark_column].isna().sum(),
+        )
+
+        debug_coverage(
+            f"{metric_name} merged country values",
+            self.data,
+            country_column,
+        )
 
     def absorb_national_metric(self, metric_data, metric_name, country_label="NL"):
         """Add a national monthly metric to every matching country-panel row."""
@@ -106,13 +206,35 @@ class ImmigrationPanel:
 
         self.data = self.data.loc[within_bounds].reset_index(drop=True)
 
+        debug(
+            "Filtered period range: %s to %s",
+            self.data["Period"].min(),
+            self.data["Period"].max(),
+        )
+
+        debug("Rows remaining: %d", len(self.data))
+
     def restrict_countries(self, countries):
         """Keep observations for the specified countries only."""
+
+        debug(
+            "Countries before restriction: %s",
+            sorted(self.data["Country"].unique().tolist()),
+        )
+
+        debug("Requested countries: %s", countries)
 
         self.data = (
             self.data.loc[self.data["Country"].isin(countries)]
             .reset_index(drop=True)
         )
+
+        debug(
+            "Countries after restriction: %s",
+            sorted(self.data["Country"].unique().tolist()),
+        )
+
+        debug("Rows remaining: %d", len(self.data))
 
     def to_csv(self, output_file):
         """Write the assembled panel without its DataFrame index."""

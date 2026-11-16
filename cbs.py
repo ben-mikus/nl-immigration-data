@@ -7,6 +7,8 @@ Imported by main.py to fetch configured CBS tables and map their codes to countr
 import pandas as pd
 import requests
 
+from debug import debug, debug_frame
+
 
 def extract_and_standardize_immigration(
     table,
@@ -18,27 +20,45 @@ def extract_and_standardize_immigration(
 
     country_codes = get_odata(f"{table_url}/{table['country_codes_endpoint']}")
 
-    return standardize_immigration_observations(
+    standardized = standardize_immigration_observations(
         observations,
         country_codes,
         country_name_replacements,
         table["country_column"],
     )
 
+    debug_frame(
+        f"Standardized CBS {table['id']}",
+        standardized,
+    )
+
+    return standardized
+
 
 def get_odata(target_url, params=None):
     frames = []
+
     while target_url:
+        debug("CBS request URL: %s", target_url)
+
         response = requests.get(target_url, params=params)
         response.raise_for_status()
+        debug("CBS response status: %s", response.status_code)
+        debug("CBS final request URL: %s", response.url)
 
         payload = response.json()
+        debug("CBS observations returned: %d", len(payload["value"]))
+        debug("CBS has next page: %s", bool(payload.get("@odata.nextLink")))
         frames.append(pd.DataFrame(payload["value"]))
 
         target_url = payload.get("@odata.nextLink")
         params = None
 
-    return pd.concat(frames, ignore_index=True)
+    result = pd.concat(frames, ignore_index=True)
+
+    debug_frame("CBS API response", result)
+
+    return result
 
 
 def standardize_monthly_period(periods):

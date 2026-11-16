@@ -57,7 +57,7 @@ CBS_TABLES = [
                 "or Migratieachtergrond eq 'H008592' "
                 "or Migratieachtergrond eq 'H008636' "
                 "or Migratieachtergrond eq 'H008718' "
-                "or Migratieachtergrond eq 'H008723'"
+                "or Migratieachtergrond eq 'H008723' "
                 "or Migratieachtergrond eq 'H008749' "
                 ")"
             )
