@@ -4,7 +4,12 @@
 Run this module to retrieve source data, merge it, apply period bounds, and write CSV output.
 """
 
-from settings import COUNTRIES, CONJUNCTUURKLOK, METRICS
+from settings import (
+    COUNTRIES,
+    CONJUNCTUURKLOK,
+    METRICS,
+    FEATURE_ENGINEERING,
+)
 from config import (
     CBS_COUNTRY_NAME_REPLACEMENTS,
     CBS_TABLES,
@@ -72,6 +77,18 @@ def main():
             metric["benchmark_country"],
             metric["benchmark_label"],
         )
+
+    panel.restrict_countries(COUNTRIES)
+
+    if FEATURE_ENGINEERING:
+        panel.engineer_features()
+
+    panel.restrict_periods(
+        PANEL_START_PERIOD,
+        PANEL_END_PERIOD,
+    )
+
+    panel.to_csv(PANEL_DATA_FILE)
 
     panel.restrict_countries(COUNTRIES)    
     panel.restrict_periods(PANEL_START_PERIOD, PANEL_END_PERIOD)

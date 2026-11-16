@@ -4,6 +4,14 @@
 
 DEBUG = True
 
+FEATURE_ENGINEERING = True
+
+FEATURE_PERIODS = {
+    "UNEMP": 12,
+    "WAGESAL": 12,
+    "HICP": 12,
+}
+
 COUNTRIES = [
     "Bulgaria",
     "Germany",

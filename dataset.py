@@ -8,12 +8,14 @@ import re
 
 import pandas as pd
 
+from features import engineer_features
 from debug import (
     debug,
     debug_frame,
     debug_coverage,
     debug_duplicates,
 )
+
 
 
 class ImmigrationPanel:
@@ -179,6 +181,10 @@ class ImmigrationPanel:
             on="Period",
             how="left",
         )
+
+    def engineer_features(self):
+        """Apply configured economic feature transformations."""
+        self.data = engineer_features(self.data)
 
     def restrict_periods(self, start_period=None, end_period=None):
         """Keep observations within inclusive YYYYMM period bounds."""
