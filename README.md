@@ -1,55 +1,125 @@
 # Netherlands Immigration Panel
 
-Build a monthly panel of Dutch immigration observations and economic indicators
-for a selected origin country. The current configuration compares Poland with
-the Netherlands using minimum wages in purchasing-power standards, the
-wages-and-salaries Labour Cost Index, and the Dutch Conjunctuurklok.
+This repository builds a monthly panel dataset of immigration to the Netherlands and corresponding economic indicators for six European origin countries: Bulgaria, Germany, Italy, Poland, Romania, and Spain.
 
-## Setup and run
+The dataset combines immigration observations from Statistics Netherlands (CBS), economic indicators from Eurostat, and the Dutch Conjunctuurklok business-cycle indicator. Additional economic features are engineered to capture changes over time and differences between origin countries and the Netherlands.
 
-Use Python 3.12 or later, then install the two runtime dependencies:
+The resulting dataset supports the forecasting analysis conducted in the [nl-immigration-thesis](https://github.com/ben-mikus/nl-immigration-thesis) project.
+
+
+## Setup
+
+Use Python 3.12 or later. From the repository root, create a critual environment and install the dependencies:
 
 ```PowerShell
 python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 ```
 
-```PowerShell
-python -m pip install -r requirements.txt
+Execute the complete pipeline using:
+
+```Powershell
+python main.py
 ```
 
 The pipeline retrieves CBS and Eurostat data at runtime and writes the final
 panel to `data\panel_data.csv`. It does not persist raw API responses.
 
-## Configure the panel
 
-Edit `config.py` to adapt the panel. The principal configuration surfaces are:
+## Configuration
 
-| Goal | Configuration |
+The configuration of the project is separated into two modules:
+- **settings.py** controls the contents of the final datset and operational functionality.
+- **config.py** defines the API sources, source-specific parameters, country mapping, file paths, and period boundaries.
+
+### User Settings
+
+By default, the configuration includes all six countries, four Eurotat indicators, the Conjunctuurklok featre, and feature engineering. Users can customize the panel data by altering the following:
+
+| Setting | Description |
 | --- | --- |
-| Change the output period | Set `PANEL_START_PERIOD` and `PANEL_END_PERIOD` to inclusive `YYYYMM` values, such as `"201001"` and `"202512"`. |
-| Change the origin country | Update the CBS country dimension code in both `CBS_TABLES` filters, `CBS_COUNTRY_NAME_REPLACEMENTS`, `EUROSTAT_COUNTRY_NAME_REPLACEMENTS`, and the `geo` entries in every metric. Keep `NL` and `"Netherlands"` when a Dutch benchmark is required. |
-| Change economic indicators | Replace or add entries in `EUROSTAT_METRICS`. Each entry needs a Eurostat dataset ID, a metric name, benchmark settings, frequency, and the dataset's API dimension filters. |
-| Use monthly, quarterly, or half-yearly Eurostat data | Omit `frequency` or use `"M"` for monthly data; use `"Q"` for quarterly data and `"S"` for half-yearly data. Quarterly and half-yearly values are repeated across the months they cover. |
-| Configure minimum wages | The current `earn_mw_cur` entry requests half-yearly national minimum wages in PPS using `("currency", "PPS")`. Change the currency filter to `EUR` or `NAC` when needed. |
-| Configure the Labour Cost Index | The current `lc_lci_r2_q` entry requests `D11` wages and salaries, seasonally and calendar adjusted (`SCA`), as a 2020=100 index (`I20`) for the `B-S` economy. Change these filters to select another component, adjustment, unit, or industry scope. |
-| Replace the Dutch business-cycle series | Update `table-conjunctuur-indicator.csv`. It must provide `Periode` and `Cyclus` columns; supported period formats are Dutch month names such as `januari 2025` and abbreviations such as `Jan-25`. |
-| Remove the local business-cycle series | Remove the `panel.absorb_national_metric(...)` call in `main.py` and the associated `load_conjunctuurklok` import. |
+| `COUNTRIES` | Selects the countries included in the output. |
+| `METRICS` | Selects which configured Eurostat indicators are retrieved. |
+| `CONJUNCTUURKLOK` | Enables or disables the Dutch business-cycle indicator. |
+| `FEATURE_ENGINEERING` | Enables or disables the creation of derived economic features. |
+| `FEATURE_PERIODS` | Specifies the number of monthly observations used to calculate changes and growth rates. |
+| `DEBUG` | Enables detailed diagnostics and dataset validation. |
 
-`ImmigrationPanel` combines metrics by `Period` and `Country`. It writes the
-country value and the Dutch benchmark value as separate columns; it does not
-calculate difference columns.
+
+## Data Sources
+
+The pipeline retrieves data from two CBS OData tables, four Eurostat indicators, and one CSV file hosted on GitHub containing Dutch Conjunctuurklol records.
+
+### Immigration Data - CBS
+
+| **Datatset** | **Purpose** |
+| --- | --- |
+| `85484NED` | Immigration observations using the country-of-origin dimension. |
+| `83518NED` | Immigration observations using the migration-background dimension. |
+
+The observations are standardized into three columns: `Period`, `Country`, and `Immigration` where immigration represents the count of persons.
+
+### Economic Indicators - Eurostat
+
+| **Indicator** | **Definition** | **Frequency** |
+| --- | --- | --- |
+| `MINWAGE` | National **Minimum Wages** expressed in purchasing-power standards. | Semiannual |
+| `WAGESAL` | Seasonally and calendar-adjusted **Labour Cost Index** for wages and salaries. | Quarterly |
+| `UNEMP` | **Unemployment Rate** as a percentage of the active population. | Monthly |
+| `GDP` | Real **GDP Percentage Change** relative to the preceding period. | Quarterly |
+
+
+### Business-Cycle Indicator -- Conjunctuurklok
+
+The Dutch **Conjunctuurklok** is a statistic published by CBS that is designed to track short term movements in the Dutch business cycle. The monthly historical publications of this indicator form a series, which the pipeline attaches to the panel dataset by every matching country-month observation.
+
+The inclusion of this indicator in the output dataset is configurable in `settings.py`.
+
+## Feature Engineering
+
+When FEATURE_ENGINEERING is enables, `features.py` creates additional economic features from the assembled economic indicators. The features capture changes within individual indicators and relative economic differences between origin countries and the Netherlands.
+
+changes within individual countries and relative economic differences between origin countries and the Netherlands.
+
+| **Feature** | **Calculation** |
+| --- | --- |
+| `UNEMP-GAP` | Origin unemployment rate − Dutch unemployment rate |
+| `UNEMP-CHANGE` | Change in origin unemployment rate over 12 observations |
+| `NL-UNEMP-CHANGE` | Change in Dutch unemployment rate over 12 observations |
+| `WAGESAL-GROWTH` | Percentage growth in origin wages and salaries index over 12 observations |
+| `NL-WAGESAL-GROWTH` | Percentage growth in Dutch wages and salaries index over 12 observations |
+| `WAGESAL-GAP` | Dutch wages and salaries growth − origin wages and salaries growth |
+| `MINWAGE-RATIO` | Dutch minimum wage ÷ origin minimum wage |
+| `GDP-GROWTH-GAP` | Dutch real GDP growth − origin real GDP growth |
+
+These transformations are calculated within each country after sorting observations chronologically. They assume a continuous monthly panel; observations without sufficient preceding history produce missing values.
+
+Feature engineering takes place before the final period restriction, allowing available historical observations outside the output window to contribute to the calculated features.
 
 ## Output
 
-`data\panel_data.csv` contains one row per country and month. `Period`,
+The completed dataset is exported to:
+
+**data\panel_data.csv**
+
+Each row of the results CSV contains one row per country and month. `Period`,
 `Country`, and `Immigration` retain their capitalized names. Country metrics
 use a `Country-` prefix, and Netherlands benchmarks use an `NL-` prefix.
 
-| Code | Meaning |
+| Columns | Description |
 | --- | --- |
-| `MINWAGE` | National minimum wage in purchasing-power standards (PPS). |
-| `WAGESAL` | Wages-and-salaries Labour Cost Index; seasonally and calendar adjusted, 2020=100, whole economy. |
-| `CONJCLK` | Dutch Conjunctuurklok business-cycle indicator. |
+| `Period` | Monthly period in YYYYMM format |
+| `Country` | Origin country |
+| `Immigration` | Monthly immigration observations |
+| `Country-{CODE}` | Origin-country economic indicator |
+| ` NL-{CODE}` | Corresponding Dutch economic benchmark |
+| `NL-CONJCLK` | Dutch business-cycle indicator, when enabled |
+| Engineered Features | Derived indicators described in the *Feature Engineering* section |
+
+The dataset retains missing economic observations rather than automatically imputing them. Missing values may result from unavailable source observations or insufficient historical data for feature calculations.
+
+Publication delays and forecasting-time information availability are handled separately in the downstream forecasting project.
 
 The active period bounds are applied immediately before export, so changing
 them limits the final CSV without modifying the downloaded source coverage.
